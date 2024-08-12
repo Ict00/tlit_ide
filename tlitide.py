@@ -1,9 +1,11 @@
+import threading
 import time
-
 import textual.widgets.text_area
+from textual import on
 from textual.app import App, ComposeResult
-from textual.widgets import TextArea, Header, Footer, DirectoryTree
-from textual.containers import Grid, VerticalScroll
+from textual.widgets import TextArea, Header, Footer, DirectoryTree, Input
+from textual.containers import Grid, Container
+from textual.screen import *
 from rich.syntax import Syntax
 from rich.traceback import Traceback
 from textual.reactive import var
@@ -49,6 +51,67 @@ CODES = {
 CURRENT = "new.tgl"
 
 
+class NewFileScreen(Screen):
+    BINDINGS = [
+        ("escape", "quit_without")
+    ]
+    CSS = \
+"""
+NewFileScreen {
+    align: center middle;
+    background: rgba(0,0,0,0);
+}
+
+#newfile
+{
+    border: thick $panel-lighten-1;
+    background: $panel;
+    padding: 0 1;
+    align: center middle;
+    layout: grid;
+    grid-gutter: 1 2;
+    grid-rows: 1fr 3;
+    grid-size: 1 2;
+    width: 30%;
+    height: 15%;
+}
+
+#file-c-label
+{
+    text-align: center;
+    align: center top;
+    dock: top;
+}
+
+#file-input 
+{
+    align-horizontal: center;
+    text-align: center;
+    dock: bottom;
+}
+"""
+
+    def compose(self) -> ComposeResult:
+        with Container(id="newfile"):
+            yield textual.widgets.Label("Create a new file", id="file-c-label")
+            yield textual.widgets.Input(placeholder="main.tgl", id="file-input")
+
+    def action_quit_without(self):
+        self.app.pop_screen()
+
+    @on(Input.Submitted, "#file-input")
+    def inp(self, _inp: Input):
+        global CURRENT, CODES
+        try:
+            open(_inp.value, "x").close()
+            CURRENT = _inp.value
+            CODES[CURRENT] = ""
+        except:
+            pass
+        self.app.pop_screen()
+        self.app.exit(4)
+
+
 class TLitIDE(App):
     CSS = \
 """
@@ -74,32 +137,39 @@ CodeBrowser.-show-tree #tree-view {
     max-width: 50%;
 }
 
-
-
-#code-view {
-    overflow: auto scroll;
-    min-width: 100%;
-    hatch: right $primary;
-}
-
 #code {
     width: 100%;
     border: none;
 }
+
+#helper {
+    width: 40%;
+    border: none;
+    dock: right;
+}
+
+#file-creator 
+{
+    layout: grid;
+    grid-size: 1 2;
+    width: 40%;
+    height: 15vh;
+    border: none;
+    align: center bottom;
+    dock: bottom;
+}
+
+
 """
     BINDINGS = [
         ("f5", "start_app", "Build & Start"),
         ("f3", "open_term", "Open terminal"),
         ("f2", "copy_cl", "Copy code to clipboard"),
         ("ctrl+s", "save_all", "Save all"),
+        ("ctrl+h", "code_helper", "Call for help"),
+        ("ctrl+n", "new_file", "Create new file"),
         ("q", "smart_quit", "Quit App"),
     ]
-
-    show_tree = var(True)
-
-    def watch_show_tree(self, show_tree: bool) -> None:
-        """Called when show_tree is modified."""
-        self.set_class(show_tree, "-show-tree")
 
     def compose(self) -> ComposeResult:
         global lit_theme, CODES, CURRENT
@@ -112,12 +182,12 @@ CodeBrowser.-show-tree #tree-view {
             text.theme = "lit_theme"
 
         path = "./" if len(sys.argv) < 2 else sys.argv[1]
-        yield Header()
+        yield Header(id="header")
         with Grid(id="main-container"):
             yield DirectoryTree(path, id="tree-view")
-            with VerticalScroll(id="code-view"):
-                yield text
+            yield text
         yield Footer()
+        self.sub_title = CURRENT
 
     def on_directory_tree_file_selected(
             self, event: DirectoryTree.FileSelected
@@ -137,15 +207,30 @@ CodeBrowser.-show-tree #tree-view {
             self.query_one("#code", TextArea).theme = "tglyph_theme"
         else:
             self.query_one("#code", TextArea).theme = "lit_theme"
+        self.sub_title = CURRENT
 
     def on_mount(self) -> None:
         self.query_one(DirectoryTree).focus()
+
+    def action_new_file(self) -> None:
+        self.action_save_all()
+        self.push_screen(NewFileScreen())
+
+    def action_code_helper(self) -> None:
+        if os.name == 'nt':
+            def run_paint():
+                os.system("mspaint")
+            threading.Thread(target=run_paint).start()
+        else:
+            try:
+                self.query_one("#helper", TextArea).remove()
+            except:
+                self.mount(TextArea.code_editor("",id="helper", theme="vscode_dark"))
 
     def action_copy_cl(self) -> None:
         global CODES, CURRENT
         CODES[CURRENT] = self.query_one("#code", TextArea).text
         self.copy_to_clipboard(CODES[CURRENT])
-        self.mount()
 
     def action_smart_quit(self) -> None:
         self.action_save_all()
@@ -202,7 +287,7 @@ if __name__ == "__main__":
                 pass
             finally:
                 input()
-        else:
+        elif res == 1:
             try:
                 print("\x1b[2J\x1b[H", end='', flush=True)
                 os.system(f"python lit.py -d {CURRENT}")
@@ -210,3 +295,7 @@ if __name__ == "__main__":
                 pass
             finally:
                 input()
+        elif res == 4:
+            pass
+        else:
+            ran = False
