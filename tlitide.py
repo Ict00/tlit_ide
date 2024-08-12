@@ -277,7 +277,10 @@ if __name__ == "__main__":
         elif res == 2:
             try:
                 print("\x1b[2J\x1b[H", end='', flush=True)
-                os.system(f"python interpreter.py {CURRENT}")
+                if os.path.isfile("interpreter.py"):
+                    os.system(f"python interpreter.py {CURRENT}")
+                else:
+                    print(f"\x1b[1;38;5;46m|\x1b[0m\x1b[1m No T^ interpreter found\x1b[0m")
             except SystemExit:
                 pass
             finally:
@@ -285,7 +288,10 @@ if __name__ == "__main__":
         elif res == 1:
             try:
                 print("\x1b[2J\x1b[H", end='', flush=True)
-                os.system(f"python lit.py -d {CURRENT}")
+                if os.path.isfile("lit.py"):
+                    os.system(f"python lit.py -d {CURRENT}")
+                else:
+                    print(f"\x1b[1;38;5;202m|\x1b[0m\x1b[1m No Lit compiler found\x1b[0m")
             except SystemExit:
                 pass
             finally:
