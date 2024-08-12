@@ -88,8 +88,10 @@ CodeBrowser.-show-tree #tree-view {
 """
     BINDINGS = [
         ("f5", "start_app", "Build & Start"),
+        ("f3", "open_term", "Open terminal"),
+        ("f2", "copy_cl", "Copy code to clipboard"),
+        ("ctrl+s", "save_all", "Save all"),
         ("q", "smart_quit", "Quit App"),
-        ("f2", "copy_cl", "Copy code to clipboard")
     ]
 
     show_tree = var(True)
@@ -145,16 +147,17 @@ CodeBrowser.-show-tree #tree-view {
         self.mount()
 
     def action_smart_quit(self) -> None:
-        global CODES, CURRENT
-        CODES[CURRENT] = self.query_one("#code", TextArea).text
-        for i in list[str](CODES.keys()):
-            try:
-                open(i, "w").write(CODES[i])
-            except:
-                pass
+        self.action_save_all()
         self.exit(0)
 
     def action_start_app(self) -> None:
+        self.action_save_all()
+        if os.path.splitext(CURRENT)[1] == ".tgl":
+            self.exit(2)
+        else:
+            self.exit(1)
+
+    def action_save_all(self) -> None:
         global CODES, CURRENT
         CODES[CURRENT] = self.query_one("#code", TextArea).text
         for i in list[str](CODES.keys()):
@@ -162,10 +165,10 @@ CodeBrowser.-show-tree #tree-view {
                 open(i, "w").write(CODES[i])
             except:
                 pass
-        if os.path.splitext(CURRENT)[1] == ".tgl":
-            self.exit(-5)
-        else:
-            self.exit(1)
+
+    def action_open_term(self) -> None:
+        self.action_save_all()
+        self.exit(3)
 
 
 if __name__ == "__main__":
@@ -176,7 +179,21 @@ if __name__ == "__main__":
         res = app.run()
         if res == 0:
             ran = False
-        elif res == -5:
+        elif res == 3:
+            term_ran = True
+            print("\x1b[2J\x1b[H", flush=True)
+            print("\x1b[1m[!] To exit, enter ':q'.\x1b[0m", flush=True)
+            while term_ran:
+                inp = input(f"[\x1b[38;5;50m{os.getcwd()}\x1b[0m]\n> \x1b[1m")
+                print(end='\x1b[0m', flush=True)
+                if inp == ":q":
+                    term_ran = False
+                try:
+                    os.system(inp)
+                except:
+                    print(f"\x1b[1;38;5;196m| Something went wrong:\x1b[0m\x1b[1m {inp}\x1b[0m")
+            pass
+        elif res == 2:
             try:
                 print("\x1b[2J\x1b[H", end='', flush=True)
                 os.system(f"python interpreter.py {CURRENT}")
