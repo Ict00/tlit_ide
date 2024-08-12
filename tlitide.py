@@ -191,10 +191,16 @@ CodeBrowser.-show-tree #tree-view {
         self.sub_title = CURRENT
 
     def action_run_paint(self):
-        if os.name == 'nt':
-            def paint():
+        def paint():
+            if os.name == 'nt':
                 os.system("mspaint")
-            threading.Thread(target=paint).start()
+            else:
+                if os.path.isfile("/usr/bin/krita"):
+                    os.system("krita")
+                else:
+                    os.system("krita")
+
+        threading.Thread(target=paint).start()
 
     def on_directory_tree_file_selected(
             self, event: DirectoryTree.FileSelected
