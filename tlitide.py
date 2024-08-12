@@ -162,6 +162,7 @@ CodeBrowser.-show-tree #tree-view {
 
 """
     BINDINGS = [
+        ("f6", "run_paint", "Open Paint"),
         ("f5", "start_app", "Build & Start"),
         ("f4", "code_helper", "Call for help"),
         ("f3", "open_term", "Open terminal"),
@@ -170,20 +171,6 @@ CodeBrowser.-show-tree #tree-view {
         ("ctrl+n", "new_file", "Create new file"),
         ("q", "smart_quit", "Quit App"),
     ]
-
-    def run(
-        self,
-        *,
-        headless: bool = False,
-        inline: bool = False,
-        inline_no_clear: bool = False,
-        mouse: bool = True,
-        size: tuple[int, int] | None = None,
-        auto_pilot: AutopilotCallbackType | None = None,
-    ) -> ReturnType | None:
-        if os.name == 'nt':
-            self.BINDINGS.insert(0, ("f6", "run_paint", "Open Paint"))
-        super()
 
     def compose(self) -> ComposeResult:
         global lit_theme, CODES, CURRENT
