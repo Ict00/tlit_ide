@@ -36,6 +36,7 @@ tglyph_theme = TextAreaTheme(
         "number": Style(color="dark_slate_gray2"),
         "operator": Style(color="green"),
         "variable": Style(color="green"),
+        "keyword": Style(color="green"),
         "comment": Style(color="slate_blue3")
     }
 )
