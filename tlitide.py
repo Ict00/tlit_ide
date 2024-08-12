@@ -162,6 +162,7 @@ CodeBrowser.-show-tree #tree-view {
 
 """
     BINDINGS = [
+        ("f6", "run_paint", "Open Paint"),
         ("f5", "start_app", "Build & Start"),
         ("f4", "code_helper", "Call for help"),
         ("f3", "open_term", "Open terminal"),
@@ -188,13 +189,12 @@ CodeBrowser.-show-tree #tree-view {
             yield text
         yield Footer()
         self.sub_title = CURRENT
-        if os.name == 'nt':
-            self.BINDINGS.insert(0, ("f6", "run_paint", "Open Paint"))
 
     def action_run_paint(self):
-        def paint():
-            os.system("mspaint")
-        threading.Thread(target=paint).start()
+        if os.name == 'nt':
+            def paint():
+                os.system("mspaint")
+            threading.Thread(target=paint).start()
 
     def on_directory_tree_file_selected(
             self, event: DirectoryTree.FileSelected
