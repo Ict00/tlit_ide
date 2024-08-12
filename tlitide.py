@@ -217,15 +217,10 @@ CodeBrowser.-show-tree #tree-view {
         self.push_screen(NewFileScreen())
 
     def action_code_helper(self) -> None:
-        if os.name == 'nt':
-            def run_paint():
-                os.system("mspaint")
-            threading.Thread(target=run_paint).start()
-        else:
-            try:
-                self.query_one("#helper", TextArea).remove()
-            except:
-                self.mount(TextArea.code_editor("",id="helper", theme="vscode_dark"))
+        try:
+            self.query_one("#helper", TextArea).remove()
+        except:
+            self.mount(TextArea.code_editor("", id="helper", theme="vscode_dark"))
 
     def action_copy_cl(self) -> None:
         global CODES, CURRENT
